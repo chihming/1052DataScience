@@ -2,28 +2,78 @@
 
 args = commandArgs(trailingOnly=TRUE)
 
-if (length(args)!=4 | args[1]!="-files" | args[3]!="-out") {
-    stop("Please follow the command:\n
-    \"hw1_104761501.R -files [InputFileName] -out [OutputFileName]\"", call.=FALSE)
-}
-
-TestCSV = read.csv(file=args[2])
-FI = args[2]
-FI = gsub(".csv$", "", FI)
-name_vec = c('set')
-max_vec = c(FI)
-
-for (col in 1:length(TestCSV))
+input_filenames = c()
+output_filename = c()
+for (col in 1:length(args))
 {
-    if (class(TestCSV[,col])=="numeric")
+    if (args[col]=="-files")
     {
-        name_vec = cbind(name_vec, names(TestCSV[col]))
-        max_vec = cbind(max_vec, round(max(TestCSV[,col]), digits=2))
+        if (col+1>length(args))
+        {
+            stop("please specify the [InputFileName]")
+        }
+        
+        fnames = strsplit(args[col+1], ",")
+        for (i in 1:length(fnames[[1]]))
+        {
+            fname = fnames[[1]][i]
+            if(!file.exists(fname))
+            {
+                stop(fname, " not exists")
+            }
+            else
+            {
+                input_filenames = cbind(input_filenames, fname)
+            }
+        }
+    }
+    if (args[col]=="-out")
+    {
+        if (col+1>length(args))
+        {
+            stop("please specify the [OutputFileName]")
+        }
+        output_filename = args[col+1]
     }
 }
+
+if (length(input_filenames)==0)
+{
+    stop("please specify the [InputFileName]")
+}
+
+if (length(output_filename)==0)
+{
+    stop("please specify the [OutputFileName]")
+}
+
+
+#################################
+### Main Process
+#################################
+
+if (file.exists(output_filename))
+{
+    file.remove(output_filename)
+}
+
 df = data.frame()
-df = rbind(df, max_vec)
-colnames(df) = name_vec
+for (i in 1:length(input_filenames))
+{
 
-write.table(df, row.names=FALSE, col.names=TRUE, sep=',', quote=FALSE, file=args[4])
+    TestCSV = read.csv(file=input_filenames[i])
+    FI = gsub(".csv$", "", input_filenames[i])
+    name_vec = c('set')
+    max_vec = c(FI)
 
+    for (col in 1:length(TestCSV))
+    {
+        if (class(TestCSV[,col])=="numeric")
+        {
+            name_vec = cbind(name_vec, names(TestCSV[col]))
+            max_vec = cbind(max_vec, round(max(TestCSV[,col]), digits=2))
+        }
+    }
+    write.table(name_vec, append=T, row.names=F, col.names=F, sep=',', quote=F, file=output_filename)
+    write.table(max_vec, append=T, row.names=F, col.names=F, sep=',', quote=F, file=output_filename)
+}
