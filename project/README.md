@@ -4,3 +4,4 @@
 run.sh
 ```
 3. submit the predict.csv to submission page
+4. the score is around 4th position
